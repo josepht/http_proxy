@@ -52,8 +52,8 @@ class ProxyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         '''
         Handle GET requests.
 
-        Support 'Range' header and 'range' query parameter.  Return the requested
-        range even if the remote host doesn't support byteranges.
+        Support 'Range' header and 'range' query parameter.  Return the
+        requested range even if the remote host doesn't support byteranges.
         '''
 
         if self.path == '/stats':
@@ -70,7 +70,8 @@ class ProxyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                 self.send_error(416)
 
             # fetch the requested resource.
-            # TODO: add support for caching resources when a range request is made.
+            # TODO: add support for caching resources when a
+            # range request is made.
             body = b''
             conn = http.client.HTTPConnection(url.netloc)
             conn.request(self.command, self.path, url.params, self.headers)
