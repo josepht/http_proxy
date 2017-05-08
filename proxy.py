@@ -10,29 +10,18 @@ from redis import Redis
 redis = Redis(host='redis', port=6379)
 
 
-def parse_range(range_str):
-    if not range_str.startswith('bytes='):
-        return None
-
-    range_str = range_str[len('bytes='):]
-
-    start, end = range_str.split('-')
-
-    if not start:
-        start = 0
-
-
 class ForkedHTTPServer(ForkingMixIn, http.server.HTTPServer):
     """ Handle requests in a separate process. """
 
 
 class ProxyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     def stats(self):
+        '''Handler for '/stats' path to show proxy stats .'''
         now = datetime.datetime.utcnow().timestamp()
         start_time = float(redis.get('start_time'))
         bytes_transferred = int(redis.get('bytes'), 10)
-
         uptime = now - start_time
+
         self.send_response(200)
         self.send_header('Content-Type', 'text/plain')
         self.end_headers()
@@ -60,6 +49,13 @@ class ProxyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         self.do_GET()
 
     def do_GET(self):
+        '''
+        Handle GET requests.
+
+        Support 'Range' header and 'range' query parameter.  Return the requested
+        range even if the remote host doesn't support byteranges.
+        '''
+
         if self.path == '/stats':
             self.stats()
         else:
@@ -73,6 +69,8 @@ class ProxyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             if range_query and range_header and range_query != range_header:
                 self.send_error(416)
 
+            # fetch the requested resource.
+            # TODO: add support for caching resources when a range request is made.
             body = b''
             conn = http.client.HTTPConnection(url.netloc)
             conn.request(self.command, self.path, url.params, self.headers)
@@ -89,7 +87,7 @@ class ProxyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                 # query string parameter to some website so we leave it in
                 # for now.
             else:
-                range_str = None
+                range_str = ''
 
             if range_str:
                 range_str = range_str[len('bytes='):]
