@@ -102,6 +102,7 @@ class ProxyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                 end = int(end, 10)
                 headers['Content-Range'] = 'bytes {}-{}/{}'.format(
                     start, end, len(body))
+                headers['Content-Length'] = end - start
                 body = body[start:end]
 
             self.send_response(response.status, response.reason)
