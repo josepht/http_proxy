@@ -18,8 +18,8 @@ class ProxyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     def stats(self):
         '''Handler for '/stats' path to show proxy stats .'''
         now = datetime.datetime.utcnow().timestamp()
-        start_time = float(redis.get('start_time'))
-        bytes_transferred = int(redis.get('bytes'), 10)
+        start_time = float(redis.get('proxy_start_time'))
+        bytes_transferred = int(redis.get('proxy_bytes'), 10)
         uptime = now - start_time
 
         self.send_response(200)
@@ -111,8 +111,8 @@ class ProxyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                 self.send_header(header, value)
             self.end_headers()
 
-            byte_count = int(redis.get('bytes'), 10) + len(body)
-            redis.set('bytes', byte_count)
+            byte_count = int(redis.get('proxy_bytes'), 10) + len(body)
+            redis.set('proxy_bytes', byte_count)
             self.wfile.write(bytes(body))
 
 
@@ -121,8 +121,8 @@ def run(server_class=ForkedHTTPServer,
     start_time = datetime.datetime.utcnow().timestamp()
 
     # store data to be shared with forked child processes in redis
-    redis.set('start_time', start_time)
-    redis.set('bytes', 0)
+    redis.set('proxy_start_time', start_time)
+    redis.set('proxy_bytes', 0)
     server_address = ('', 8080)
     httpd = server_class(server_address, handler_class)
     httpd.serve_forever()
