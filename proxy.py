@@ -36,7 +36,8 @@ class ProxyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-Type', 'text/plain')
         self.end_headers()
-        stats = "Uptime: {}\nBytes: {}\n".format(uptime, bytes_transferred)
+        stats = "Uptime: {}\nBytes transferred: {}\n".format(
+            str(datetime.timedelta(seconds=uptime)), bytes_transferred)
         self.wfile.write(bytes(stats.encode('utf-8')))
         self.wfile.flush()
 
